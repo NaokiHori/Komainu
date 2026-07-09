@@ -1,0 +1,24 @@
+examples/errors/main.rs:18:9: error: `density` is already defined at examples/errors/main.rs:10:9
+examples/errors/main.rs:20:9: error: invalid name `Bad Name`: expected `[a-z_][a-z0-9_]*`
+8:4: error: undefined identifier `velocty`
+12:14: error: undefined identifier `foo`
+12:20: error: undefined identifier `bar`
+16:13: error: expected an identifier, a number or `(`, found end of expression
+20:6: error: expected an operator, found `density`
+24:23: error: expected `)`, found end of expression
+26:11: error: unmatched `)`
+30:23: error: only one `=` is allowed in an expression
+34:4: error: operator `partial` takes 2 arguments, found 1
+38:4: error: `partial` is an operator; write `partial(...)`
+40:4: error: `density` is not an operator
+42:4: error: undefined identifier `unknown`
+46:21: error: expected `,` or `)`, found `time`
+48:22: error: expected an identifier, a number or `(`, found `)`
+52:4: error: unexpected character `\` (raw LaTeX is not allowed in expressions; define a symbol instead)
+56:1: error: empty placeholder
+60:11: error: expected whitespace before `}}`
+64:1: error: unterminated placeholder: expected `}}`
+examples/errors/main.rs:22:9: error: `unused` is defined but never used
+examples/errors/main.rs:23:9: error: `unused_operator` is defined but never used
+
+22 errors found
