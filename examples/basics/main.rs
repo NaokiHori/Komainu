@@ -35,10 +35,12 @@ fn build(template: String) -> Document {
         Expr::partial_derivative(&args[0], &args[1])
     });
     doc.operator("sqrt", 1, |args| Expr::sqrt(&args[0]));
-    // A function: its notation and the number of arguments; each argument is any expression.
-    // One registration per number of arguments.
-    doc.function("step", "H", 1);
-    doc.function("f", "f", 2);
+    // A function: its notation is a symbol, and the operator applies it to the arguments.
+    // One operator per number of arguments; each argument is any expression.
+    let heaviside = doc.symbol("heaviside", "H");
+    doc.operator("step", 1, move |args| Expr::function(&heaviside, args));
+    let field = doc.symbol("field", "f");
+    doc.operator("f", 2, move |args| Expr::function(&field, args));
     doc.operator("sub", 2, |args| Expr::subscript(&args[0], &args[1]));
     doc.operator("sup", 2, |args| Expr::superscript(&args[0], &args[1]));
     // Sums have the same two forms as in the Rust API: what is summed over, or with a range.

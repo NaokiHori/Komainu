@@ -128,16 +128,6 @@ impl Document {
         }
     }
 
-    /// Registers a function callable as `name(arg, ...)` in templates: `latex` is applied to
-    /// `arity` arguments (`\\left( a, b \\right)`). Its notation is defined here and nowhere
-    /// else, so no symbol is needed.
-    #[track_caller]
-    pub fn function(&mut self, name: &str, latex: &str, arity: usize) {
-        // An unnamed symbol: it is not in the registry, so nothing has to use it.
-        let function = Expr::from_symbol(Symbol::new("", latex));
-        self.operator(name, arity, move |args| Expr::function(&function, args));
-    }
-
     fn register(&mut self, name: &str, value: &Expr, caller: &std::panic::Location<'_>) {
         let location = Location::from_caller(caller);
         if self.check_name(name, &location) {
@@ -364,34 +354,6 @@ mod tests {
             }
             other => panic!("expected a position in the Rust code, got {other:?}"),
         }
-    }
-
-    #[test]
-    fn a_function_is_registered_without_a_symbol() {
-        let mut doc = Document::new("{{ f(1) }}, {{ g(1, 2) }}");
-        doc.function("f", "f", 1);
-        doc.function("g", r"\sin", 2);
-        doc.header(false);
-        assert_eq!(
-            doc.render().unwrap(),
-            r"{f} \left( 1 \right), {\sin} \left( 1, 2 \right)"
-        );
-    }
-
-    #[test]
-    fn a_function_checks_the_number_of_arguments() {
-        let mut doc = Document::new("{{ g(1) }}");
-        doc.function("g", "g", 2);
-        let error = doc.render().unwrap_err();
-        let messages: Vec<String> = error.diagnostics().iter().map(|d| d.message()).collect();
-        assert_eq!(messages, ["operator `g` takes 2 arguments, found 1"]);
-    }
-
-    #[test]
-    fn an_unused_function_is_an_error() {
-        let mut doc = Document::new("");
-        doc.function("f", "f", 1);
-        assert!(doc.render().is_err());
     }
 
     #[test]
