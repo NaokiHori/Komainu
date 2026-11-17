@@ -1,0 +1,48 @@
+concurrency:
+  cancel-in-progress: true
+  group: "pages"
+jobs:
+  build:
+    env:
+      DESTINATION: "./dist"
+    name: Build
+    permissions:
+      contents: read
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6.0.0
+        with:
+          persist-credentials: false
+      - name: Perform quality checks and build artifacts
+        run: |
+          cargo test
+          cargo doc --no-deps
+          mv target/doc ${{ env.DESTINATION }}
+      - name: Upload artifacts
+        uses: actions/upload-pages-artifact@v5.0.0
+        with:
+          path: ${{ env.DESTINATION }}
+    timeout-minutes: 5
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    name: Deploy
+    needs: build
+    permissions:
+      id-token: write
+      pages: write
+    runs-on: ubuntu-latest
+    steps:
+      - id: configure_pages
+        name: Setup GitHub Pages
+        uses: actions/configure-pages@v6.0.0
+      - id: deployment
+        name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v5.0.0
+    timeout-minutes: 5
+name: Deploy
+on:
+  workflow_dispatch: {}
+permissions: {}
