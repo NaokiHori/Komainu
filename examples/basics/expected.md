@@ -82,6 +82,12 @@ Subscripts and superscripts are given separately from the base, so that the nota
 {{X}_{{i}}}, \qquad {{X}_{{j} + 1}}, \qquad {{{X}_{{i}}}^{{n} + 1}}
 ```
 
+Several indices are separated by commas with `list`, which is written without parentheses inside an index (and in the arguments of a function):
+
+```math
+{{X}_{{i}, {j}}}, \qquad {{X}_{{i} + \frac{1}{2}, {j} - 1}}
+```
+
 ## Functions
 
 A function is a symbol applied to arguments, which are any expressions; a function of one argument and of two arguments are registered separately:

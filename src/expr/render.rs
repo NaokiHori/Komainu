@@ -22,7 +22,9 @@ mod precedence {
 impl Expr {
     fn precedence(&self) -> u8 {
         match self.kind() {
-            ExprKind::Relation(_, _) => precedence::RELATION,
+            // Both are written at the top of what they sit in (an index, a whole equation);
+            // as an operand of anything they are parenthesized.
+            ExprKind::Relation(_, _) | ExprKind::List(_) => precedence::RELATION,
             ExprKind::Add(_, _) | ExprKind::Sub(_, _) => precedence::ADDITIVE,
             ExprKind::Named { expr, .. } => expr.precedence(),
             ExprKind::Neg(_) => precedence::PREFIX,
@@ -131,6 +133,10 @@ impl std::fmt::Display for Expr {
                     )
                 }
             },
+            ExprKind::List(items) => {
+                let items: Vec<String> = items.iter().map(Expr::to_string).collect();
+                write!(f, "{}", items.join(", "))
+            }
             ExprKind::Named { expr, .. } => write!(f, "{expr}"),
             ExprKind::Neg(e) => write!(f, "- {}", e.render(BIG_OPERATOR)),
             ExprKind::Fraction {
@@ -455,6 +461,30 @@ mod tests {
         assert_eq!(
             (&c * &product).to_string(),
             r"{c} \left( {\prod_{{k}} {b}} \right)"
+        );
+    }
+
+    #[test]
+    fn lists() {
+        let (p, i, k) = (s("P"), s("i"), s("k"));
+        let two = Expr::integer(2);
+        let list = Expr::list([&i, &(&k - &two)]);
+        assert_eq!(list.to_string(), "{i}, {k} - 2");
+        assert_eq!(
+            Expr::subscript(&p, &list).to_string(),
+            "{{P}_{{i}, {k} - 2}}"
+        );
+        assert_eq!(
+            Expr::function(&p, [Expr::list([&i, &k]), two.clone()]).to_string(),
+            r"{P} \left( {i}, {k}, 2 \right)"
+        );
+        // anywhere else it is an operand, and parenthesized
+        assert_eq!((&p * &list).to_string(), r"{P} \left( {i}, {k} - 2 \right)");
+        // half-integer grid points
+        let half = Expr::fraction(Expr::integer(1), &two);
+        assert_eq!(
+            Expr::subscript(&p, Expr::list([&i + &half, k.clone()])).to_string(),
+            r"{{P}_{{i} + \frac{1}{2}, {k}}}"
         );
     }
 

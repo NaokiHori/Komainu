@@ -23,6 +23,9 @@ enum ExprKind {
         integrand: Expr,
         variable_of_integration: Expr,
     },
+    /// Expressions separated by commas, without parentheses: `a, b`. Meant for a place that
+    /// takes several (an index `{i, k}`); anywhere else it is parenthesized.
+    List(Vec<Expr>),
     Mul(Expr, Expr),
     Named {
         name: String,
@@ -164,6 +167,7 @@ impl Expr {
             | ExprKind::Relation(l, r) => {
                 children.extend([l, r]);
             }
+            ExprKind::List(items) => children.extend(items),
             ExprKind::Neg(e) | ExprKind::Sqrt(e) | ExprKind::Paren(e) => children.push(e),
             ExprKind::Fraction {
                 numerator,
@@ -456,6 +460,19 @@ impl Expr {
             function: function.as_ref().clone(),
             arguments: arguments.into_iter().map(|a| a.as_ref().clone()).collect(),
         }))
+    }
+
+    /// `a, b, ...`: expressions separated by commas, such as the indices of
+    /// `Expr::subscript(&p, Expr::list([&i, &k]))` (`{p}_{i, k}`). It is written without
+    /// parentheses at the top of an index or an argument, and parenthesized elsewhere.
+    pub fn list<I>(items: I) -> Self
+    where
+        I: IntoIterator,
+        I::Item: AsRef<Self>,
+    {
+        Self(std::rc::Rc::new(ExprKind::List(
+            items.into_iter().map(|e| e.as_ref().clone()).collect(),
+        )))
     }
 
     pub fn pow<T: AsRef<Self>>(&self, exponent: T) -> Self {
