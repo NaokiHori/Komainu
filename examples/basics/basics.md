@@ -95,6 +95,12 @@ Several indices are separated by commas with `list`, which is written without pa
 {{ angle(list(sub(position, i), sub(position, j))) }}
 ```
 
+A derivative of a single-variable function can be written with a prime or with an order in parentheses, by combining a superscript with a symbol or with parentheses:
+
+```math
+{{ prime(pressure) }}, \qquad {{ nth_derivative(pressure, n) }}, \qquad {{ nth_derivative(sub(position, i), n - 1) }}
+```
+
 ## Functions
 
 A function is a symbol applied to arguments, which are any expressions; a function of one argument and of two arguments are registered separately:

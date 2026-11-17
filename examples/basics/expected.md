@@ -94,6 +94,12 @@ Several indices are separated by commas with `list`, which is written without pa
 \left\langle {{X}_{{i}}}, {{X}_{{j}}} \right\rangle
 ```
 
+A derivative of a single-variable function can be written with a prime or with an order in parentheses, by combining a superscript with a symbol or with parentheses:
+
+```math
+{{p}^{{\prime}}}, \qquad {{p}^{\left( {n} \right)}}, \qquad {{{X}_{{i}}}^{\left( {n} - 1 \right)}}
+```
+
 ## Functions
 
 A function is a symbol applied to arguments, which are any expressions; a function of one argument and of two arguments are registered separately:

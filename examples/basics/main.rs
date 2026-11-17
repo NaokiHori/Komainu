@@ -43,6 +43,13 @@ fn build(template: String) -> Document {
     doc.operator("f", 2, move |args| Expr::function(&field, args));
     doc.operator("sub", 2, |args| Expr::subscript(&args[0], &args[1]));
     doc.operator("sup", 2, |args| Expr::superscript(&args[0], &args[1]));
+    // Derivatives in the notation of Lagrange: a prime, or an order in parentheses. The base
+    // can be any expression; the order is a label (`sup`) in parentheses, not a power.
+    let prime = doc.symbol("prime_mark", r"\prime");
+    doc.operator("prime", 1, move |args| Expr::superscript(&args[0], &prime));
+    doc.operator("nth_derivative", 2, |args| {
+        Expr::superscript(&args[0], Expr::paren(&args[1]))
+    });
     // Several indices, separated by commas: only meaningful inside an index or an argument.
     doc.operator("list", 2, |args| Expr::list([&args[0], &args[1]]));
     // Angle brackets around what is given; with `list`, an inner product.
