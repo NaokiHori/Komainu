@@ -33,8 +33,12 @@ enum ExprKind {
     },
     Neg(Expr),
     Number(String),
-    /// Parentheses written explicitly; always written, whether or not the meaning needs them.
-    Paren(Expr),
+    /// Delimiters written explicitly (parentheses, angle brackets); always written, whether or
+    /// not the meaning needs them.
+    Delimited {
+        delimiter: Delimiter,
+        inner: Expr,
+    },
     Derivative {
         kind: DerivativeKind,
         form: DerivativeForm,
@@ -59,6 +63,15 @@ enum ExprKind {
         label: Expr,
     },
     Symbol(Symbol),
+}
+
+/// Which delimiters surround the inner expression.
+#[derive(Debug, Clone, Copy)]
+enum Delimiter {
+    /// `\left( \right)`
+    Paren,
+    /// `\left\langle \right\rangle`
+    Angle,
 }
 
 /// Which big operator: `\sum` or `\prod`.
@@ -168,7 +181,9 @@ impl Expr {
                 children.extend([l, r]);
             }
             ExprKind::List(items) => children.extend(items),
-            ExprKind::Neg(e) | ExprKind::Sqrt(e) | ExprKind::Paren(e) => children.push(e),
+            ExprKind::Neg(e) | ExprKind::Sqrt(e) | ExprKind::Delimited { inner: e, .. } => {
+                children.push(e)
+            }
             ExprKind::Fraction {
                 numerator,
                 denominator,
@@ -237,7 +252,21 @@ impl Expr {
     /// need them (for instance to keep the grouping `a + (b + c)`). Parentheses that are
     /// needed are added automatically; these are the ones the author insists on.
     pub fn paren<T: AsRef<Self>>(inner: T) -> Self {
-        Self(std::rc::Rc::new(ExprKind::Paren(inner.as_ref().clone())))
+        Self::delimited(Delimiter::Paren, inner.as_ref())
+    }
+
+    /// Angle brackets: `\left\langle inner \right\rangle`, as in an inner product
+    /// `Expr::angle(Expr::list([&f, &g]))` (`\langle f, g \rangle`). Like parentheses, they are
+    /// written as given and the inner expression is not parenthesized.
+    pub fn angle<T: AsRef<Self>>(inner: T) -> Self {
+        Self::delimited(Delimiter::Angle, inner.as_ref())
+    }
+
+    fn delimited(delimiter: Delimiter, inner: &Self) -> Self {
+        Self(std::rc::Rc::new(ExprKind::Delimited {
+            delimiter,
+            inner: inner.clone(),
+        }))
     }
 
     /// The relation `lhs = rhs`.

@@ -45,6 +45,8 @@ fn build(template: String) -> Document {
     doc.operator("sup", 2, |args| Expr::superscript(&args[0], &args[1]));
     // Several indices, separated by commas: only meaningful inside an index or an argument.
     doc.operator("list", 2, |args| Expr::list([&args[0], &args[1]]));
+    // Angle brackets around what is given; with `list`, an inner product.
+    doc.operator("angle", 1, |args| Expr::angle(&args[0]));
     // Sums have the same two forms as in the Rust API: what is summed over, or with a range.
     doc.operator("sum_over", 2, |args| Expr::sum_over(&args[0], &args[1]));
     doc.operator("sum_between", 4, |args| {

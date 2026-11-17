@@ -89,6 +89,12 @@ Several indices are separated by commas with `list`, which is written without pa
 {{ sub(position, list(i, j)) }}, \qquad {{ sub(position, list(i + 1 / 2, j - 1)) }}
 ```
 
+`angle` puts angle brackets around its argument, which gives an inner product together with `list`:
+
+```math
+{{ angle(list(sub(position, i), sub(position, j))) }}
+```
+
 ## Functions
 
 A function is a symbol applied to arguments, which are any expressions; a function of one argument and of two arguments are registered separately:

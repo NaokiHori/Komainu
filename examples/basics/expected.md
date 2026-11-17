@@ -88,6 +88,12 @@ Several indices are separated by commas with `list`, which is written without pa
 {{X}_{{i}, {j}}}, \qquad {{X}_{{i} + \frac{1}{2}, {j} - 1}}
 ```
 
+`angle` puts angle brackets around its argument, which gives an inner product together with `list`:
+
+```math
+\left\langle {{X}_{{i}}}, {{X}_{{j}}} \right\rangle
+```
+
 ## Functions
 
 A function is a symbol applied to arguments, which are any expressions; a function of one argument and of two arguments are registered separately:

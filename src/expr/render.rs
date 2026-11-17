@@ -1,7 +1,7 @@
 //! How an expression is written as LaTeX: the precedence table, where parentheses go, and how
 //! negations are written (`a + (-b)` as `a - b`, `(-a) b` as `- a b`).
 
-use super::{BigOperatorKind, DerivativeForm, DerivativeKind, Expr, ExprKind};
+use super::{BigOperatorKind, Delimiter, DerivativeForm, DerivativeKind, Expr, ExprKind};
 
 /// Binding strength of each node; a larger value binds tighter.
 /// Operands are parenthesized when their precedence is below what the position requires.
@@ -46,7 +46,7 @@ impl Expr {
                 ..
             }
             | ExprKind::Sqrt(_)
-            | ExprKind::Paren(_)
+            | ExprKind::Delimited { .. }
             | ExprKind::Subscript { .. }
             | ExprKind::Symbol(_) => precedence::ATOM,
         }
@@ -200,7 +200,10 @@ impl std::fmt::Display for Expr {
             ExprKind::Power { base, exponent } => {
                 write!(f, "{{{{{}}}^{{{exponent}}}}}", base.render(ATOM))
             }
-            ExprKind::Paren(e) => write!(f, r"\left( {e} \right)"),
+            ExprKind::Delimited { delimiter, inner } => match delimiter {
+                Delimiter::Paren => write!(f, r"\left( {inner} \right)"),
+                Delimiter::Angle => write!(f, r"\left\langle {inner} \right\rangle"),
+            },
             ExprKind::Sqrt(e) => write!(f, r"{{\sqrt{{{e}}}}}"),
             ExprKind::Symbol(s) => write!(f, "{{{}}}", s.latex),
             ExprKind::Derivative {
@@ -461,6 +464,31 @@ mod tests {
         assert_eq!(
             (&c * &product).to_string(),
             r"{c} \left( {\prod_{{k}} {b}} \right)"
+        );
+    }
+
+    #[test]
+    fn angle_brackets() {
+        let (q, k, l, w) = (s("Q"), s("k"), s("l"), s("w"));
+        let (qk, ql) = (Expr::subscript(&q, &k), Expr::subscript(&q, &l));
+        let inner = Expr::angle(Expr::list([&qk, &ql]));
+        assert_eq!(
+            inner.to_string(),
+            r"\left\langle {{Q}_{{k}}}, {{Q}_{{l}}} \right\rangle"
+        );
+        // an atom: a weight as a subscript, a factor and a power base need no parentheses
+        assert_eq!(
+            Expr::subscript(&inner, &w).to_string(),
+            r"{\left\langle {{Q}_{{k}}}, {{Q}_{{l}}} \right\rangle_{{w}}}"
+        );
+        assert_eq!(
+            (&w * &inner).to_string(),
+            r"{w} \left\langle {{Q}_{{k}}}, {{Q}_{{l}}} \right\rangle"
+        );
+        // the inner expression is as written: no automatic parentheses
+        assert_eq!(
+            Expr::angle(&k + &l).to_string(),
+            r"\left\langle {k} + {l} \right\rangle"
         );
     }
 
