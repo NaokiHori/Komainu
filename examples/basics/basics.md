@@ -101,6 +101,12 @@ A derivative of a single-variable function can be written with a prime or with a
 {{ prime(pressure) }}, \qquad {{ nth_derivative(pressure, n) }}, \qquad {{ nth_derivative(sub(position, i), n - 1) }}
 ```
 
+The value of an expression between two bounds, as written after an integration, is `evaluated_between`:
+
+```math
+{{ evaluated_between(pressure^2 / 2, -1, 1) }}
+```
+
 ## Functions
 
 A function is a symbol applied to arguments, which are any expressions; a function of one argument and of two arguments are registered separately:

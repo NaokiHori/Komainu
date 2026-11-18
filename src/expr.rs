@@ -8,6 +8,12 @@ enum ExprKind {
         upper: Option<Expr>,
         body: Expr,
     },
+    /// `\left[ body \right]_{lower}^{upper}`: the value between two bounds.
+    Evaluated {
+        body: Expr,
+        lower: Expr,
+        upper: Expr,
+    },
     Fraction {
         numerator: Expr,
         denominator: Expr,
@@ -37,7 +43,7 @@ enum ExprKind {
     /// not the meaning needs them.
     Delimited {
         delimiter: Delimiter,
-        inner: Expr,
+        body: Expr,
     },
     Derivative {
         kind: DerivativeKind,
@@ -65,7 +71,7 @@ enum ExprKind {
     Symbol(Symbol),
 }
 
-/// Which delimiters surround the inner expression.
+/// Which delimiters surround the body.
 #[derive(Debug, Clone, Copy)]
 enum Delimiter {
     /// `\left( \right)`
@@ -180,8 +186,9 @@ impl Expr {
             | ExprKind::Relation(l, r) => {
                 children.extend([l, r]);
             }
+            ExprKind::Evaluated { body, lower, upper } => children.extend([body, lower, upper]),
             ExprKind::List(items) => children.extend(items),
-            ExprKind::Neg(e) | ExprKind::Sqrt(e) | ExprKind::Delimited { inner: e, .. } => {
+            ExprKind::Neg(e) | ExprKind::Sqrt(e) | ExprKind::Delimited { body: e, .. } => {
                 children.push(e)
             }
             ExprKind::Fraction {
@@ -248,24 +255,38 @@ impl Expr {
         }
     }
 
-    /// Explicit parentheses: `\left( inner \right)`, written even where the meaning would not
+    /// Explicit parentheses: `\left( body \right)`, written even where the meaning would not
     /// need them (for instance to keep the grouping `a + (b + c)`). Parentheses that are
     /// needed are added automatically; these are the ones the author insists on.
-    pub fn paren<T: AsRef<Self>>(inner: T) -> Self {
-        Self::delimited(Delimiter::Paren, inner.as_ref())
+    pub fn paren<T: AsRef<Self>>(body: T) -> Self {
+        Self::delimited(Delimiter::Paren, body.as_ref())
     }
 
-    /// Angle brackets: `\left\langle inner \right\rangle`, as in an inner product
+    /// Angle brackets: `\left\langle body \right\rangle`, as in an inner product
     /// `Expr::angle(Expr::list([&f, &g]))` (`\langle f, g \rangle`). Like parentheses, they are
-    /// written as given and the inner expression is not parenthesized.
-    pub fn angle<T: AsRef<Self>>(inner: T) -> Self {
-        Self::delimited(Delimiter::Angle, inner.as_ref())
+    /// written as given and the body is not parenthesized.
+    pub fn angle<T: AsRef<Self>>(body: T) -> Self {
+        Self::delimited(Delimiter::Angle, body.as_ref())
     }
 
-    fn delimited(delimiter: Delimiter, inner: &Self) -> Self {
+    /// `\left[ body \right]_{lower}^{upper}`: the value of `body` between two bounds, as
+    /// written after an integration. Like parentheses, it keeps `body` as given.
+    pub fn evaluated_between<T: AsRef<Self>, L: AsRef<Self>, U: AsRef<Self>>(
+        body: T,
+        lower: L,
+        upper: U,
+    ) -> Self {
+        Self(std::rc::Rc::new(ExprKind::Evaluated {
+            body: body.as_ref().clone(),
+            lower: lower.as_ref().clone(),
+            upper: upper.as_ref().clone(),
+        }))
+    }
+
+    fn delimited(delimiter: Delimiter, body: &Self) -> Self {
         Self(std::rc::Rc::new(ExprKind::Delimited {
             delimiter,
-            inner: inner.clone(),
+            body: body.clone(),
         }))
     }
 

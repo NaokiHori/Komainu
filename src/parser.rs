@@ -310,10 +310,10 @@ impl<'a> Parser<'a, '_> {
             }
             Kind::LParen => {
                 self.pos += 1;
-                let inner = self.relation()?;
+                let body = self.relation()?;
                 if self.peek_kind() == Some(Kind::RParen) {
                     self.pos += 1;
-                    Ok(Expr::paren(inner))
+                    Ok(Expr::paren(body))
                 } else {
                     Err(syntax_error(
                         self.offset_of_next(),

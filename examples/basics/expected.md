@@ -100,6 +100,12 @@ A derivative of a single-variable function can be written with a prime or with a
 {{p}^{{\prime}}}, \qquad {{p}^{\left( {n} \right)}}, \qquad {{{X}_{{i}}}^{\left( {n} - 1 \right)}}
 ```
 
+The value of an expression between two bounds, as written after an integration, is `evaluated_between`:
+
+```math
+{\left[ \frac{{{{p}}^{2}}}{2} \right]_{- 1}^{1}}
+```
+
 ## Functions
 
 A function is a symbol applied to arguments, which are any expressions; a function of one argument and of two arguments are registered separately:

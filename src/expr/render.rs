@@ -47,6 +47,7 @@ impl Expr {
             }
             | ExprKind::Sqrt(_)
             | ExprKind::Delimited { .. }
+            | ExprKind::Evaluated { .. }
             | ExprKind::Subscript { .. }
             | ExprKind::Symbol(_) => precedence::ATOM,
         }
@@ -133,6 +134,9 @@ impl std::fmt::Display for Expr {
                     )
                 }
             },
+            ExprKind::Evaluated { body, lower, upper } => {
+                write!(f, r"{{\left[ {body} \right]_{{{lower}}}^{{{upper}}}}}")
+            }
             ExprKind::List(items) => {
                 let items: Vec<String> = items.iter().map(Expr::to_string).collect();
                 write!(f, "{}", items.join(", "))
@@ -200,9 +204,9 @@ impl std::fmt::Display for Expr {
             ExprKind::Power { base, exponent } => {
                 write!(f, "{{{{{}}}^{{{exponent}}}}}", base.render(ATOM))
             }
-            ExprKind::Delimited { delimiter, inner } => match delimiter {
-                Delimiter::Paren => write!(f, r"\left( {inner} \right)"),
-                Delimiter::Angle => write!(f, r"\left\langle {inner} \right\rangle"),
+            ExprKind::Delimited { delimiter, body } => match delimiter {
+                Delimiter::Paren => write!(f, r"\left( {body} \right)"),
+                Delimiter::Angle => write!(f, r"\left\langle {body} \right\rangle"),
             },
             ExprKind::Sqrt(e) => write!(f, r"{{\sqrt{{{e}}}}}"),
             ExprKind::Symbol(s) => write!(f, "{{{}}}", s.latex),
@@ -471,24 +475,44 @@ mod tests {
     fn angle_brackets() {
         let (q, k, l, w) = (s("Q"), s("k"), s("l"), s("w"));
         let (qk, ql) = (Expr::subscript(&q, &k), Expr::subscript(&q, &l));
-        let inner = Expr::angle(Expr::list([&qk, &ql]));
+        let body = Expr::angle(Expr::list([&qk, &ql]));
         assert_eq!(
-            inner.to_string(),
+            body.to_string(),
             r"\left\langle {{Q}_{{k}}}, {{Q}_{{l}}} \right\rangle"
         );
         // an atom: a weight as a subscript, a factor and a power base need no parentheses
         assert_eq!(
-            Expr::subscript(&inner, &w).to_string(),
+            Expr::subscript(&body, &w).to_string(),
             r"{\left\langle {{Q}_{{k}}}, {{Q}_{{l}}} \right\rangle_{{w}}}"
         );
         assert_eq!(
-            (&w * &inner).to_string(),
+            (&w * &body).to_string(),
             r"{w} \left\langle {{Q}_{{k}}}, {{Q}_{{l}}} \right\rangle"
         );
-        // the inner expression is as written: no automatic parentheses
+        // the body is as written: no automatic parentheses
         assert_eq!(
             Expr::angle(&k + &l).to_string(),
             r"\left\langle {k} + {l} \right\rangle"
+        );
+    }
+
+    #[test]
+    fn evaluated_between_bounds() {
+        let x = s("x");
+        let square = x.pow(Expr::integer(2));
+        let evaluated = Expr::evaluated_between(&square, Expr::integer(-1), Expr::integer(1));
+        assert_eq!(
+            evaluated.to_string(),
+            r"{\left[ {{{x}}^{2}} \right]_{- 1}^{1}}"
+        );
+        // an atom, and the body is as written
+        assert_eq!(
+            (&x * &evaluated).to_string(),
+            r"{x} {\left[ {{{x}}^{2}} \right]_{- 1}^{1}}"
+        );
+        assert_eq!(
+            Expr::evaluated_between(&x + &x, &x, &x).to_string(),
+            r"{\left[ {x} + {x} \right]_{{x}}^{{x}}}"
         );
     }
 

@@ -50,6 +50,10 @@ fn build(template: String) -> Document {
     doc.operator("nth_derivative", 2, |args| {
         Expr::superscript(&args[0], Expr::paren(&args[1]))
     });
+    // The value between two bounds, as written after an integration.
+    doc.operator("evaluated_between", 3, |args| {
+        Expr::evaluated_between(&args[0], &args[1], &args[2])
+    });
     // Several indices, separated by commas: only meaningful inside an index or an argument.
     doc.operator("list", 2, |args| Expr::list([&args[0], &args[1]]));
     // Angle brackets around what is given; with `list`, an inner product.
