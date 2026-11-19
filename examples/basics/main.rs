@@ -1,12 +1,22 @@
 //! Generates `out/basics.md` from `examples/basics/basics.md`.
 //! Run from the repository root: `cargo run --example basics`.
 
-use komainu::{Document, Expr};
+use komainu::{Document, Expr, Vocabulary};
 
 const TEMPLATE: &str = "examples/basics/basics.md";
 
-fn build(template: String) -> Document {
+/// Registered once and shared by every document of a project: what several documents need.
+/// Unlike what a document registers itself, what is imported need not be used by each document.
+fn common() -> Vocabulary {
+    let mut common = Vocabulary::new();
+    common.operator("sub", 2, |args| Expr::subscript(&args[0], &args[1]));
+    common.operator("sup", 2, |args| Expr::superscript(&args[0], &args[1]));
+    common
+}
+
+fn build(template: String, common: &Vocabulary) -> Document {
     let mut doc = Document::new(template);
+    doc.import(common);
 
     // A symbol: a name for the template, and the LaTeX notation for the output.
     // Creating and registering are one step; a symbol that is never used is an error.
@@ -41,8 +51,6 @@ fn build(template: String) -> Document {
     doc.operator("step", 1, move |args| Expr::function(&heaviside, args));
     let field = doc.symbol("field", "f");
     doc.operator("f", 2, move |args| Expr::function(&field, args));
-    doc.operator("sub", 2, |args| Expr::subscript(&args[0], &args[1]));
-    doc.operator("sup", 2, |args| Expr::superscript(&args[0], &args[1]));
     // Derivatives in the notation of Lagrange: a prime, or an order in parentheses. The base
     // can be any expression; the order is a label (`sup`) in parentheses, not a power.
     let prime = doc.symbol("prime_mark", r"\prime");
@@ -69,7 +77,10 @@ fn build(template: String) -> Document {
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
     let template = std::fs::read_to_string(TEMPLATE)?;
-    let markdown = build(template).render()?;
+    let common = common();
+    let markdown = build(template, &common).render()?;
+    // After every document of the project has been rendered: what no document used is an error.
+    common.check_unused()?;
     std::fs::create_dir_all("out")?;
     std::fs::write("out/basics.md", markdown)?;
     Ok(())

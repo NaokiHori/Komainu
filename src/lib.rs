@@ -8,5 +8,5 @@ mod parser;
 mod template;
 
 pub use diagnostic::{Diagnostic, Error, Location};
-pub use document::Document;
+pub use document::{Document, Vocabulary};
 pub use expr::Expr;
